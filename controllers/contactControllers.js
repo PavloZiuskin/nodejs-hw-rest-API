@@ -1,15 +1,12 @@
-const Joi = require('joi');
+
 const {listContactsService,
     getContactByIdService,
     removeContactService,
     addContactService,
     updateContactService} = require('../models/contactsServices');
-const addSchema = Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
-    phone: Joi.string().required()
-})
+const {validation} = require('../midleware/validationSchema');
+const {HttpError}= require('../helpers/');
+const { Contact, schemes } = require("../models/contact");
 
 
 const getContact = async (req, res, next) =>{
@@ -33,11 +30,7 @@ const getContactById = async (req, res, next) => {
   
   const createContact = async (req, res, next) => {
     try {
-        
-        const {error} = addSchema.validate(req.body);
-        if(error){
-            throw HttpError(400,error.message);
-        }
+      validation(req.body);
       const body = req.body;
       const newContact = await addContactService(body);
       return res.status(201).json(newContact);
@@ -49,13 +42,16 @@ const getContactById = async (req, res, next) => {
   const updateContact = async (req, res, next) => {
     try {
       const { id } = req.params;
-      const {error} = addSchema.validate(req.body);
-      if(error){
-        throw HttpError(400,error.message);
-    }
       const body = req.body;
+      const error = validation(req.body);
+      if(error){
+        throw new HttpError(400, error.message);
+      }
       const updatedContact = await updateContactService(id, body);
-      res.status(200).json(updatedContact);
+      if (!updatedContact) {
+        throw new HttpError(404, `Contact with ${id} not found`);
+      }
+      res.json(updatedContact);
     } catch (error) {
       next(error);
     }
@@ -70,11 +66,30 @@ const getContactById = async (req, res, next) => {
       next(error);
     }
   };
+  const updateStatusContact = async (req, res, next) => {
+    const { contactId } = req.params;
+    try {
+      const { error } = schemes.updateFavoriteSchemaValidation.validate(req.body);
+      if (error) {
+        throw new HttpError(400, error.message);
+      }
+      const contact = await Contact.findByIdAndUpdate(contactId, req.body, {
+        new: true,
+      });
+      if (!contact) {
+        throw new HttpError(404, `Contact with ${contactId} not found`);
+      }
+      res.json(contact);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   module.exports = {
     deleteContact,
     updateContact,
     createContact,
     getContact,
-    getContactById
+    getContactById,
+    updateStatusContact
   }
