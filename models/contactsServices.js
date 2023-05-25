@@ -1,50 +1,28 @@
-const fs = require('fs/promises');
-const path = require('path');
-const crypto = require("crypto");
 
-const contactsPath = path.join(process.cwd(), "models", "contacts.json")
+const crypto = require("crypto");
+const {Contact} = require('./contact')
+
+
 
 const listContactsService = async () => {
-  const contacts = await fs.readFile(contactsPath);
-  return JSON.parse(contacts)
+  return await Contact.find({}, "-createdAt -updatedAt");
 }
 
 const getContactByIdService = async (contactId) => {
-  const contacts = await listContactsService();
-  return contacts.find(contact => contact.id === contactId);
+  return  await Contact.findOne({ contactId });
 }
 
 const removeContactService = async (contactId) => {
-  const contacts = await listContactsService();
-  const index = contacts.findIndex(contact=> contact.id === contactId);
-  if(index === -1){
-      throw new Error("contacts not found");
-  }
-  contacts.splice(index, 1);
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return contactId;
+  return await Contact.findByIdAndRemove({ contactId });
 
 }
 
 const addContactService = async (body) => {
-  const contacts = await listContactsService();
-  const newContact = {id: crypto.randomUUID(), ...body};
-    contacts.push(newContact);
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return newContact;
-
+  return await Contact.create(body);
 }
 
 const updateContactService = async (contactId, body) => {
-  const contacts = await listContactsService();
-  let contact = contacts.find(contact => contact.id === contactId);
-  if(!contact){
-    throw new Error("contact not found");
-  }
-  contacts = { ...contact, ...body};
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    return contacts;
+  return await Contact.findByIdAndUpdate(contactId , body, { new: true });
 }
 
 module.exports = {
