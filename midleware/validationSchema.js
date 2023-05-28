@@ -1,11 +1,14 @@
-const {schemes} = require('../models/contact');
-const {addSchema} = schemes;
-const {HttpError} = require('../helpers')
-const validation = (body)=>{
-    const {error} = addSchema.validate(body);
+const HttpError = require("../utils/HttpError")
+
+const validateBody = (schema) => {
+    return (req,res,next) => {
+        const {error} = schema.validate(req.body);
         if(error){
-            throw new HttpError(400,error.message);
+            next(new HttpError(422, `${error}`));
+            return;
         }
+        next();
+    }
 }
 
-module.exports = {validation}
+module.exports = validateBody;
