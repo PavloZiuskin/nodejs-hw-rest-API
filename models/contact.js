@@ -7,6 +7,10 @@ const contactSchema = new Schema({
     email: { type: String, unique: true, required: true },
     phone: { type: String, required: true },
     favorite: {type: Boolean, default: false, required: true},
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: 'user',
+      }
 },{versionKey: false, timestamps: true})
 
 const Contact = model("contact", contactSchema);
