@@ -1,5 +1,6 @@
 const { Contact } = require("../models/Contact");
 
+
 const listContactsService = async (limit, page, owner) => {
   const skip = ((page - 1) * limit);
   return await Contact.find({ owner }, "-createdAt -updatedAt").populate(
@@ -24,10 +25,12 @@ const updateContactService = async (contactId, body) => {
   return await Contact.findByIdAndUpdate(contactId, body, { new: true });
 };
 
+
+
 module.exports = {
   listContactsService,
   getContactByIdService,
   removeContactService,
   addContactService,
-  updateContactService,
+  updateContactService
 };
