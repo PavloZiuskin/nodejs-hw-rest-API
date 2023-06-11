@@ -26,6 +26,14 @@ const schema = new mongoose.Schema(
       enum: ["starter", "pro", "business"],
       default: "starter",
     },
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      required: [true, "Verify token is required"],
+    },
     avatarURL: String,
     token: String,
   },
@@ -42,8 +50,18 @@ const userLoginSchema = Joi.object({
   password: Joi.string().required(),
   email: Joi.string().pattern(emailRegex).required(),
 });
+const joiVerifyEmailSchema = Joi.object({
+  email: Joi.string()
+    .pattern(new RegExp(emailRegex))
+    .required()
+    .messages({ "any.required": "missing required field email" }),
+});
 
-const schemas = { userRegisrtationSchema, userLoginSchema };
+const schemas = {
+  userRegisrtationSchema,
+  userLoginSchema,
+  joiVerifyEmailSchema,
+};
 
 const User = model("user", schema);
 
